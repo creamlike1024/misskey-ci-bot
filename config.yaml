@@ -1,0 +1,42 @@
+github:
+  username: # github 用户名
+  action-repo: misskey-docker-ci  # 用于构建 misskey docker 镜像的 github action 仓库名
+  token:  # 用于访问 github api，需要有 action repo 的相应权限
+telegram:
+  chat-id: 12345678 # 你的 telegram 账号的 chat id，可以使用 @userinfobot 获取
+  bot-token: 1234567890:AA... # 你的 telegram bot 的 token，可以使用 @BotFather 获取
+  display-timezone: Asia/Tokyo  # 更新信息显示的时区
+deploy:
+  method: local # 部署方式，可选 ssh 或 local
+  # ssh: 使用 ssh 登录服务器，需要配置 ssh 部分
+  # local: 直接在程序运行的服务器上部署（如果程序和 misskey 部署在同一台服务器上），执行程序的用户需要有使用 docker 的权限
+  backup-script: /home/claire/backup.sh # 备份脚本路径，如果是使用 ssh 部署，脚本应该在对应服务器上
+  path: /opt/misskey # misskey docker 所在目录
+  docker-compose-file: docker-compose.yml # docker-compose 文件名
+  misskey-db-name: misskey # 数据库名
+  misskey-db-user: misskey # 数据库用户名
+  misskey-container-name: web # misskey docker compose 容器名
+  db-container-name: db # 数据库 docker compose 容器名
+  auto-deploy: true # （慎用）有更新时，构建完镜像后无需确认自动部署，如果为 false，则只构建镜像，不部署
+ssh:
+  # 当 deploy.method 为 ssh 时，以下配置才会生效
+  user: claire  # 使用的用户需要有使用 docker 的权限
+  host:  # 服务器地址，可以是 IP 或域名
+  port:   # 留空则为 22
+  # known-hosts: /home/claire/.ssh/known_hosts # 已知主机文件，暂未实现，计划支持
+  key-file: /home/claire/.ssh/id_ed25519 # 密钥文件绝对路径，使用密码登录时请留空
+  key-passphrase: # 密钥文件密码
+  password: # 密钥登录时不需要密码，密钥登录优先级高于密码登录
+cron:
+  # action: 执行的操作，可选 backup, reindex, analyze
+  #   -
+  #     backup: 备份数据库
+  #     reindex: 重建数据库索引
+  #     analyze: 分析数据库
+  # cron: cron 表达式，使用系统时区
+  -
+    action: reindex
+    cron: "0 1 * * *" # 每天凌晨 1 点执行
+  -
+    action: analyze
+    cron: "0 2 * * *"
