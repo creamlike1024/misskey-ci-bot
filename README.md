@@ -22,6 +22,9 @@ A bot that can help you easily update misskey and do some daily maintenance jobs
 
 1. Fork [misskey-docker-ci](https://github.com/creamlike1024/misskey-docker-ci) 仓库，按照 README 配置好 secrets
 2. 转到 `Github Settings ->  Developer settings -> Personal access tokens -> Fine-grained tokens` 生成一个新 token，仓库选择刚才 Fork 的 misskey-docker-ci，给予 Actions 的 `Read and Write` 权限，保存
+  ![Screenshot_20230224_105451](https://user-images.githubusercontent.com/25699126/221217747-d48a2e52-d4ed-411e-b823-a3af2862c2f9.png)
+  ![Screenshot_20230224_105522](https://user-images.githubusercontent.com/25699126/221217806-d79d12d0-f8b8-4d1d-9131-c492f95ea57a.png)
 3. 下载 Release。只编译了 linux amd64 版本，需要其它架构可自行进行编译
-4. 填充 `config.yml` 配置文件
-5. 启动 bot，保持运行
+4. 修改 `backup.sh` 备份脚本，并放到合适的位置
+5. 填充 `config.yml` 配置文件
+6. 启动 bot，保持运行
