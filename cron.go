@@ -23,6 +23,8 @@ func CronJobRunner() {
 			s.Tag(job.action).Cron(job.cron).Do(func() {
 				err := DbReindex()
 				CronJobRepoter(err, "reindex")
+				err = StartMisskeyContainer()
+				CronJobRepoter(err, "reindex: start misskey container")
 			})
 		case "backup":
 			s.Tag(job.action).Cron(job.cron).Do(func() {
@@ -33,6 +35,36 @@ func CronJobRunner() {
 			s.Tag(job.action).Cron(job.cron).Do(func() {
 				err := DbAnalyze()
 				CronJobRepoter(err, "analyze")
+				err = StartMisskeyContainer()
+				CronJobRepoter(err, "analyze: start misskey container")
+			})
+		case "vacuum":
+			s.Tag(job.action).Cron(job.cron).Do(func() {
+				err := DbVacuum()
+				CronJobRepoter(err, "vacuum")
+				err = StartMisskeyContainer()
+				CronJobRepoter(err, "vacuum: start misskey container")
+			})
+		case "vacuum-full":
+			s.Tag(job.action).Cron(job.cron).Do(func() {
+				err := DbVacuumFull()
+				CronJobRepoter(err, "vacuum-full")
+				err = StartMisskeyContainer()
+				CronJobRepoter(err, "vacuum-full: start misskey container")
+			})
+		case "vacuum-analyze":
+			s.Tag(job.action).Cron(job.cron).Do(func() {
+				err := DbVacuumAnalyze()
+				CronJobRepoter(err, "vacuum-analyze")
+				err = StartMisskeyContainer()
+				CronJobRepoter(err, "vacuum-analyze: start misskey container")
+			})
+		case "vacuum-full-analyze":
+			s.Tag(job.action).Cron(job.cron).Do(func() {
+				err := DbVacuumFullAnalyze()
+				CronJobRepoter(err, "vacuum-full-analyze")
+				err = StartMisskeyContainer()
+				CronJobRepoter(err, "vacuum-full-analyze: start misskey container")
 			})
 		}
 	}

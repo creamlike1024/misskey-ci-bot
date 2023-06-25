@@ -28,11 +28,15 @@ ssh:
   key-passphrase: # 密钥文件密码
   password: # 密钥登录时不需要密码，密钥登录优先级高于密码登录
 cron:
-  # action: 执行的操作，可选 backup, reindex, analyze
+  # action: 执行的操作，可选 backup, reindex, analyze, vacuum, vacuum-full, vacuum-analyze, vacuum-full-analyze
   #   -
   #     backup: 备份数据库
   #     reindex: 重建数据库索引
   #     analyze: 分析数据库
+  #     vacuum: 优化数据库
+  #     vacuum-full: 优化数据库（完全）
+  #     vacuum-analyze: 优化并分析数据库
+  #     vacuum-full-analyze: 优化并分析数据库（完全）
   # cron: cron 表达式，使用系统时区
   -
     action: reindex

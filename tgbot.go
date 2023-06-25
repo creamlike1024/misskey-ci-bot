@@ -86,6 +86,22 @@ func RunTelegramBot() {
 				go func() {
 					_, _ = bot.Send(dbReindex(update.Message))
 				}()
+			case "dbVacuumFull":
+				go func() {
+					_, _ = bot.Send(dbVacuumFull(update.Message))
+				}()
+			case "dbVacuumFullAnalyze":
+				go func() {
+					_, _ = bot.Send(dbVacuumFullAnalyze(update.Message))
+				}()
+			case "dbVacuum":
+				go func() {
+					_, _ = bot.Send(dbVacuum(update.Message))
+				}()
+			case "dbVacuumAnalyze":
+				go func() {
+					_, _ = bot.Send(dbVacuumAnalyze(update.Message))
+				}()
 			case "dbAnalyze":
 				go func() {
 					_, _ = bot.Send(dbAnalyze(update.Message))
@@ -198,6 +214,10 @@ func help(msg *tgbotapi.Message) tgbotapi.MessageConfig {
 		"/cronStatus - 显示当前 cron 任务状态\n" +
 		"/dbBackup - 备份数据库\n" +
 		"/dbReindex - 重建数据库索引\n" +
+		"/dbVacuum - 清理数据库空间\n" +
+		"/dbVacuumFull - 重建数据库索引并清理空间\n" +
+		"/dbVacuumAnalyze - 清理数据库空间并更新统计数据\n" +
+		"/dbVacuumFullAnalyze - 重建数据库索引并清理空间并更新统计数据\n" +
 		"/dbAnalyze - 更新数据库统计数据，通常导入备份后执行\n" +
 		"/down - Down 所有容器\n" +
 		"/up - Up 所有容器\n" +
@@ -304,6 +324,82 @@ func dbReindex(msg *tgbotapi.Message) tgbotapi.MessageConfig {
 	return m
 }
 
+func dbVacuumFull(msg *tgbotapi.Message) tgbotapi.MessageConfig {
+	var text string
+	IndependentNotification <- "开始 VacuumFull 操作，将会停止 Misskey 容器并需要较长时间，请耐心等待"
+	if err := DbVacuumFull(); err != nil {
+		text += "VacuumFull 失败"
+	} else {
+		text += "VacuumFull 成功"
+	}
+	err := StartMisskeyContainer()
+	if err != nil {
+		text += "，重新启动 Misskey 容器失败"
+	} else {
+		text += "，重新启动 Misskey 容器成功"
+	}
+	m := tgbotapi.NewMessage(msg.Chat.ID, text)
+	m.ReplyToMessageID = msg.MessageID
+	return m
+}
+
+func dbVacuumFullAnalyze(msg *tgbotapi.Message) tgbotapi.MessageConfig {
+	var text string
+	IndependentNotification <- "开始 VacuumFullAnalyze 操作，将会停止 Misskey 容器并需要较长时间，请耐心等待"
+	if err := DbVacuumFullAnalyze(); err != nil {
+		text += "VacuumFullAnalyze 失败"
+	} else {
+		text += "VacuumFullAnalyze 成功"
+	}
+	err := StartMisskeyContainer()
+	if err != nil {
+		text += "，重新启动 Misskey 容器失败"
+	} else {
+		text += "，重新启动 Misskey 容器成功"
+	}
+	m := tgbotapi.NewMessage(msg.Chat.ID, text)
+	m.ReplyToMessageID = msg.MessageID
+	return m
+}
+
+func dbVacuum(msg *tgbotapi.Message) tgbotapi.MessageConfig {
+	var text string
+	IndependentNotification <- "开始 Vacuum 操作，将会停止 Misskey 容器并需要较长时间，请耐心等待"
+	if err := DbVacuum(); err != nil {
+		text += "Vacuum 失败"
+	} else {
+		text += "Vacuum 成功"
+	}
+	err := StartMisskeyContainer()
+	if err != nil {
+		text += "，重新启动 Misskey 容器失败"
+	} else {
+		text += "，重新启动 Misskey 容器成功"
+	}
+	m := tgbotapi.NewMessage(msg.Chat.ID, text)
+	m.ReplyToMessageID = msg.MessageID
+	return m
+}
+
+func dbVacuumAnalyze(msg *tgbotapi.Message) tgbotapi.MessageConfig {
+	var text string
+	IndependentNotification <- "开始 VacuumAnalyze 操作，将会停止 Misskey 容器并需要较长时间，请耐心等待"
+	if err := DbVacuumAnalyze(); err != nil {
+		text += "VacuumAnalyze 失败"
+	} else {
+		text += "VacuumAnalyze 成功"
+	}
+	err := StartMisskeyContainer()
+	if err != nil {
+		text += "，重新启动 Misskey 容器失败"
+	} else {
+		text += "，重新启动 Misskey 容器成功"
+	}
+	m := tgbotapi.NewMessage(msg.Chat.ID, text)
+	m.ReplyToMessageID = msg.MessageID
+	return m
+}
+
 func dbAnalyze(msg *tgbotapi.Message) tgbotapi.MessageConfig {
 	var text string
 	IndependentNotification <- "开始更新数据库统计数据，请耐心等待"
@@ -311,6 +407,12 @@ func dbAnalyze(msg *tgbotapi.Message) tgbotapi.MessageConfig {
 		text += "更新统计数据失败"
 	} else {
 		text += "更新统计数据成功"
+	}
+	err := StartMisskeyContainer()
+	if err != nil {
+		text += "，重新启动 Misskey 容器失败"
+	} else {
+		text += "，重新启动 Misskey 容器成功"
 	}
 	m := tgbotapi.NewMessage(msg.Chat.ID, text)
 	m.ReplyToMessageID = msg.MessageID

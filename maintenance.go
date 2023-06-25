@@ -19,17 +19,21 @@ type DeployConfig struct {
 }
 
 type Commands struct {
-	Cd         string
-	Pull       string
-	Down       string
-	Up         string
-	Prune      string
-	StartWeb   string
-	StopWeb    string
-	RestartWeb string
-	RestartAll string
-	DbReindex  string
-	DbAnalyze  string
+	Cd                  string
+	Pull                string
+	Down                string
+	Up                  string
+	Prune               string
+	StartWeb            string
+	StopWeb             string
+	RestartWeb          string
+	RestartAll          string
+	DbReindex           string
+	DbAnalyze           string
+	DbVacuumFull        string
+	DbVacuumFullAnalyze string
+	DbVacuum            string
+	DbVacuumAnalyze     string
 }
 
 var CommandsInstance Commands
@@ -78,10 +82,11 @@ func Deploy() error {
 }
 
 func DbReindex() error {
-	command := CommandsInstance.Cd + " && " + CommandsInstance.DbReindex
+	// 需要先停止 web 服务
+	command := CommandsInstance.Cd + " && " + CommandsInstance.StopWeb + " && " + CommandsInstance.DbReindex
 	if DeployConfigInstance.IsLocal {
-		out, err := exec.Command("sh", "-c", command).Output()
-		if err != nil || !bytes.Contains(out, []byte("REINDEX")) {
+		_, err := exec.Command("sh", "-c", command).Output()
+		if err != nil {
 			return err
 		}
 		return nil
@@ -102,8 +107,141 @@ func DbReindex() error {
 		}
 		defer closeSSH()
 		// 执行 db reindex 命令
+		_, err = RunCommand(session, command)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
+func DbVacuumFull() error {
+	// 需要先停止 web 服务
+	command := CommandsInstance.Cd + " && " + CommandsInstance.StopWeb + " && " + CommandsInstance.DbVacuumFull
+	if DeployConfigInstance.IsLocal {
+		out, err := exec.Command("sh", "-c", command).Output()
+		if err != nil || !bytes.Contains(out, []byte("VACUUM")) {
+			return err
+		}
+		return nil
+	} else {
+		// 建立 SSH 连接
+		sshClient, err := NewSSHClient(SSHConfigInstance)
+		if err != nil {
+			return err
+		}
+		// 新建 session
+		session, err := sshClient.NewSession()
+		if err != nil {
+			return err
+		}
+		closeSSH := func() {
+			_ = session.Close()
+			_ = sshClient.Close()
+		}
+		defer closeSSH()
+		// 执行 db vacuum full 命令
 		outBuffer, err := RunCommand(session, command)
-		if err != nil || !strings.Contains(outBuffer.String(), "REINDEX") {
+		if err != nil || !strings.Contains(outBuffer.String(), "VACUUM") {
+			return err
+		}
+		return nil
+	}
+}
+
+func DbVacuumFullAnalyze() error {
+	command := CommandsInstance.Cd + " && " + CommandsInstance.StopWeb + " && " + CommandsInstance.DbVacuumFullAnalyze
+	if DeployConfigInstance.IsLocal {
+		out, err := exec.Command("sh", "-c", command).Output()
+		if err != nil || !bytes.Contains(out, []byte("VACUUM")) {
+			return err
+		}
+		return nil
+	} else {
+		// 建立 SSH 连接
+		sshClient, err := NewSSHClient(SSHConfigInstance)
+		if err != nil {
+			return err
+		}
+		// 新建 session
+		session, err := sshClient.NewSession()
+		if err != nil {
+			return err
+		}
+		closeSSH := func() {
+			_ = session.Close()
+			_ = sshClient.Close()
+		}
+		defer closeSSH()
+		// 执行 db vacuum full analyze 命令
+		outBuffer, err := RunCommand(session, command)
+		if err != nil || !strings.Contains(outBuffer.String(), "VACUUM") {
+			return err
+		}
+		return nil
+	}
+}
+
+func DbVacuum() error {
+	command := CommandsInstance.Cd + " && " + CommandsInstance.StopWeb + " && " + CommandsInstance.DbVacuum
+	if DeployConfigInstance.IsLocal {
+		out, err := exec.Command("sh", "-c", command).Output()
+		if err != nil || !bytes.Contains(out, []byte("VACUUM")) {
+			return err
+		}
+		return nil
+	} else {
+		// 建立 SSH 连接
+		sshClient, err := NewSSHClient(SSHConfigInstance)
+		if err != nil {
+			return err
+		}
+		// 新建 session
+		session, err := sshClient.NewSession()
+		if err != nil {
+			return err
+		}
+		closeSSH := func() {
+			_ = session.Close()
+			_ = sshClient.Close()
+		}
+		defer closeSSH()
+		// 执行 db vacuum 命令
+		outBuffer, err := RunCommand(session, command)
+		if err != nil || !strings.Contains(outBuffer.String(), "VACUUM") {
+			return err
+		}
+		return nil
+	}
+}
+
+func DbVacuumAnalyze() error {
+	command := CommandsInstance.Cd + " && " + CommandsInstance.StopWeb + " && " + CommandsInstance.DbVacuumAnalyze
+	if DeployConfigInstance.IsLocal {
+		out, err := exec.Command("sh", "-c", command).Output()
+		if err != nil || !bytes.Contains(out, []byte("VACUUM")) {
+			return err
+		}
+		return nil
+	} else {
+		// 建立 SSH 连接
+		sshClient, err := NewSSHClient(SSHConfigInstance)
+		if err != nil {
+			return err
+		}
+		// 新建 session
+		session, err := sshClient.NewSession()
+		if err != nil {
+			return err
+		}
+		closeSSH := func() {
+			_ = session.Close()
+			_ = sshClient.Close()
+		}
+		defer closeSSH()
+		// 执行 db vacuum 命令
+		outBuffer, err := RunCommand(session, command)
+		if err != nil || !strings.Contains(outBuffer.String(), "VACUUM") {
 			return err
 		}
 		return nil
@@ -112,15 +250,10 @@ func DbReindex() error {
 
 func DbAnalyze() error {
 	// ANALYZE 需要在关闭 Misskey 容器的情况下执行
-	// analyze 结束后再启动 Misskey 容器
 	command := CommandsInstance.Cd + " && " + CommandsInstance.StopWeb + " && " + CommandsInstance.DbAnalyze
 	if DeployConfigInstance.IsLocal {
 		out, err := exec.Command("sh", "-c", command).Output()
 		if err != nil || !bytes.Contains(out, []byte("ANALYZE")) {
-			return err
-		}
-		err = StartMisskeyContainer()
-		if err != nil {
 			return err
 		}
 		return nil
@@ -143,10 +276,6 @@ func DbAnalyze() error {
 		// 执行 db analyze 命令
 		outBuffer, err := RunCommand(session, command)
 		if err != nil || !strings.Contains(outBuffer.String(), "ANALYZE") {
-			return err
-		}
-		err = StartMisskeyContainer()
-		if err != nil {
 			return err
 		}
 		return nil
