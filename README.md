@@ -1,3 +1,6 @@
+![](https://github.com/creamlike1024/misskey-ci-bot/assets/25699126/23599d9e-cac6-47d1-82d4-bde26b6a2705)
+
+
 # misskey-ci-bot
 A bot that can help you easily update misskey and do some daily maintenance jobs
 
